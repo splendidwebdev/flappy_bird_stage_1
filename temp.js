@@ -19,9 +19,16 @@ class Pipe {
         this.y = 0;
         this.y2 = this.theight + this.gap;
         this.passed = 0;
+        this.speed = 110;
     }
     update(dt) {
-        this.x -= 3;
+        if (isNaN(dt)) {
+        dt = 0;
+    }
+    if (isNaN(this.x)) {
+        this.x = 0;
+    }
+        this.x -= this.speed * dt;
     }
     draw() {
         ctx.fillStyle = 'green';
@@ -35,9 +42,9 @@ class Player {
         this.width = 20;
         this.height = 20;
         this.x = (canvas.width / 2) - this.width;
-        this.y = 2;  // Ensure initial y position is a number
+        this.y = 2;
         this.velocity_x = 0;
-        this.velocity_y = 0;  // Ensure initial velocity is a number
+        this.velocity_y = 0;
         this.gravity = 2700;
         this.keys = [];
         this.speed = Math.min(canvas.width, canvas.height) * 0.0009;
@@ -64,7 +71,6 @@ class Player {
         });
     }
     update(dt) {
-        // Ensure dt is a number and valid
         if (isNaN(dt)) {
             dt = 0;
         }
@@ -83,13 +89,12 @@ class Player {
             this.y = canvas.height - this.height;
             this.velocity_y = 0;
         } else if (this.y <= 0) {
-            this.y = 0;  // Fix player going out of bounds at the top
-            this.velocity_y = 0;
+            this.y = 0;
+            this.velocity_y *= 0.1;
         }
         this.y += this.velocity_y * dt;
         this.x += this.velocity_x * dt;
 
-        // Log updated player position
     }
     draw() {
         ctx.font = "20px Rubik";
@@ -106,21 +111,22 @@ class Game {
         this.score = 0;
     }
     update(dt) {
+        if(this.score<0) location.reload();
         this.pipes.forEach(pipe => {
             pipe.update(dt);
             if (this.player.x + this.player.width > pipe.x &&
                 this.player.y < pipe.theight &&
                 this.player.x < pipe.width + pipe.x) {
-                // Collision logic here
+                    this.score -= 1;
             } else if (this.player.x + this.player.width > pipe.x &&
                        this.player.y + this.player.height > pipe.theight + pipe.gap &&
                        this.player.x < pipe.width + pipe.x) {
-                // Collision logic here
+                        this.score -= 1;
             }
 
             if (!pipe.passed && pipe.x + pipe.width < this.player.x) {
                 pipe.passed = true;
-                this.score++;
+                this.score+= 300;
             }
             if (pipe.x <= canvas.width / 2 - pipe.width && !this.insert) {
                 this.insert = true;
@@ -147,7 +153,7 @@ let lastTime = 0;
 
 function render(currentTime) {
     let deltaTime = (currentTime - lastTime) / 1000;
-    if (deltaTime > 0.1) deltaTime = 0.1;  // Cap deltaTime to avoid large jumps
+    if (deltaTime > 0.1) deltaTime = 0.1;
     lastTime = currentTime;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     game.update(deltaTime);
